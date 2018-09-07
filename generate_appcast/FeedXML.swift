@@ -37,7 +37,7 @@ func linebreak(_ element: XMLElement) {
 }
 
 
-func writeAppcast(appcastDestPath: URL, updates: [ArchiveItem]) throws {
+func writeAppcast(appcastDestPath: URL, updates: [ArchiveItem], downloadURLString: String? = nil) throws {
     let appBaseName = updates[0].appPath.deletingPathExtension().lastPathComponent;
 
     let sparkleNS = "http://www.andymatuschak.org/xml-namespaces/sparkle";
@@ -140,8 +140,14 @@ func writeAppcast(appcastDestPath: URL, updates: [ArchiveItem]) throws {
         guard let archiveURL = update.archiveURL?.absoluteString else {
             throw makeError(code: .appcastError, "Bad archive name or feed URL");
         };
+
+//        var downloadString: String? = nil
+//        if (downloadURLString != nil) {
+//            downloadString = downloadURLString! + (update.archiveURL?.lastPathComponent)!
+//        }
+
         var attributes = [
-            XMLNode.attribute(withName: "url", stringValue: archiveURL) as! XMLNode,
+            XMLNode.attribute(withName: "url", stringValue: downloadURLString ?? archiveURL) as! XMLNode,
             XMLNode.attribute(withName: "sparkle:version", uri: sparkleNS, stringValue: update.version) as! XMLNode,
             XMLNode.attribute(withName: "sparkle:shortVersionString", uri: sparkleNS, stringValue: update.shortVersion) as! XMLNode,
             XMLNode.attribute(withName: "length", stringValue: String(update.fileSize)) as! XMLNode,

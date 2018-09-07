@@ -14,8 +14,9 @@ func printUsage() {
     let command = URL(fileURLWithPath: CommandLine.arguments.first!).lastPathComponent;
     print("Generate appcast from a directory of Sparkle updates\n",
         "Usage:\n",
-        "       \(command) < -f private key path | -k keychain_path -n key_name > <directory with update archives>\n",
+        "       \(command) < -f private key path | -k keychain_path -n key_name > <directory with update archives> [optional download URL string]\n",
         " e.g. \(command) -k ~/Library/Keychains/login.keychain -n 'My Private Key' archives/\n",
+        " e.g. \(command) -k ~/Library/Keychains/login.keychain -n 'My Private Key' archives/ https://mydownload.url/downloads/\n",
         "\nOR (legacy)\n\n",
         "       \(command) <private key path> <directory with update archives>\n",
         " e.g. \(command) dsa_priv.pem archives/\n",
@@ -34,9 +35,9 @@ func main() {
     
     let privateKey: SecKey
     
-    if args.count == 3 || (args.count == 4 && args[1] == "-f") {
+    if args.count == 3 || args.count == 4 || (args.count == 4 && args[1] == "-f") || args.count == 5 && args[1] == "-f" {
         // private key specified by filename
-        let privateKeyURL = URL(fileURLWithPath: args.count == 3 ? args[1] : args[2])
+        let privateKeyURL = URL(fileURLWithPath: args.count == 4 ? args[1] : args[2])
         
         do {
             privateKey = try loadPrivateKey(at: privateKeyURL)
@@ -45,7 +46,7 @@ func main() {
             exit(1)
         }
     }
-    else if args.count == 6 && (args[1] == "-n" || args[1] == "-k") {
+    else if args.count >= 6 && (args[1] == "-n" || args[1] == "-k") {
         // private key specified by keychain + key name
         let keyName: String
         let keychainURL: URL
@@ -80,15 +81,25 @@ func main() {
         printUsage()
         exit(1)
     }
+
+    let lastArg = args.last!
+    let archivesSourceDir: URL
+    var downloadURLString: String? = nil
+
+    if (lastArg.starts(with: "http")) {
+        archivesSourceDir = URL(fileURLWithPath: args[args.index(of: lastArg)! - 1], isDirectory: true)
+        downloadURLString = lastArg
+    } else {
+        archivesSourceDir = URL(fileURLWithPath: lastArg, isDirectory: true)
+    }
     
-    let archivesSourceDir = URL(fileURLWithPath: args.last!, isDirectory: true)
 
     do {
         let allUpdates = try makeAppcast(archivesSourceDir: archivesSourceDir, privateKey: privateKey, verbose:verbose);
         
         for (appcastFile, updates) in allUpdates {
             let appcastDestPath = URL(fileURLWithPath: appcastFile, relativeTo: archivesSourceDir);
-            try writeAppcast(appcastDestPath:appcastDestPath, updates:updates);
+            try writeAppcast(appcastDestPath:appcastDestPath, updates:updates, downloadURLString: downloadURLString);
             print("Written", appcastDestPath.path, "based on", updates.count, "updates");
         }
     } catch {
