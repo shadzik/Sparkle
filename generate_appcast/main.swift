@@ -37,7 +37,7 @@ func main() {
     
     if args.count == 3 || args.count == 4 || (args.count == 4 && args[1] == "-f") || args.count == 5 && args[1] == "-f" {
         // private key specified by filename
-        let privateKeyURL = URL(fileURLWithPath: args.count == 4 ? args[1] : args[2])
+        let privateKeyURL = URL(fileURLWithPath: args.count == 3 ? args[1] : args[2])
         
         do {
             privateKey = try loadPrivateKey(at: privateKeyURL)
