@@ -86,6 +86,8 @@
         promptData = [NSData dataWithBytes:"yes\n" length:4];
         
         NSMutableArray *arguments = [@[@"attach", self.archivePath, @"-mountpoint", mountPoint, /*@"-noverify",*/ @"-nobrowse", @"-noautoopen"] mutableCopy];
+        SULog(SULogLevelDefault, @"hdiutil arguments:%@", arguments);
+
         
         if (self.decryptionPassword) {
             NSMutableData *passwordData = [[self.decryptionPassword dataUsingEncoding:NSUTF8StringEncoding] mutableCopy];
